@@ -49,6 +49,7 @@
 #include "BscSerial.h"
 #include "BmsData.h"
 #include "mqtt_t.h"
+#include "syslog_t.h"
 #include "log.h"
 #include "i2c.h"
 #include "webUtility.h"
@@ -1282,6 +1283,9 @@ void setup()
 
   //mqtt
   initMqtt();
+
+  //syslog
+  initSyslog();
 
   //init WLAN
   BSC_LOGI(TAG, "Init WLAN...");
