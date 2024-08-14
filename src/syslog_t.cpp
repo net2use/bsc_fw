@@ -78,6 +78,7 @@ bool syslogLoop()
 }
 
 bool sendSyslogf(const char *tag, const char *fmt, ...) {
+  if(mSyslogEnable != SYSLOG_ENABLE_STATE_READY) return false;
   va_list args;
   bool result;
 

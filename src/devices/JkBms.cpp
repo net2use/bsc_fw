@@ -6,7 +6,6 @@
 #include "devices/JkBms.h"
 #include "BmsData.h"
 #include "mqtt_t.h"
-#include "log.h"
 #include <devices/jkbms/JkBmsTypes.hpp>
 
 static const char *TAG = "JK_BMS";
@@ -160,6 +159,10 @@ static bool recvAnswer(uint8_t *p_lRecvBytes)
   //Überprüfe Cheksum
 	uint8_t crcB3 = (u16_crc >> 8) & 0xFF;  // Byte 3
   uint8_t crcB4 = u16_crc & 0xFF;         // Byte 4
+
+  sendSyslogf(TAG,"Package complete! RecvBytes=%i, %i, %i, %i, CRC: %i, %i, %i, %i, CRC: %i, %i", u16_mLastRecvBytesCnt, p_lRecvBytes[u16_mLastRecvBytesCnt-7], p_lRecvBytes[u16_mLastRecvBytesCnt-6], p_lRecvBytes[u16_mLastRecvBytesCnt-5], p_lRecvBytes[u16_mLastRecvBytesCnt-4],
+      p_lRecvBytes[u16_mLastRecvBytesCnt-3], p_lRecvBytes[u16_mLastRecvBytesCnt-2], p_lRecvBytes[u16_mLastRecvBytesCnt-1],crcB3,crcB4);
+
 
   #ifdef JK_DEBUG
   BSC_LOGD(TAG,"crc=%i %i", crcB3, crcB4);

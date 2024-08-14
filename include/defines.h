@@ -8,6 +8,7 @@
 
 #include "params_dt.h"
 #include "bscTime.h"
+#include "syslog_t.h"
 
 #define BSC_SW_VERSION      "V0.6.0"
 
@@ -712,6 +713,7 @@ static const char* mqttTopics[] = {"", // 0
 
 
 #endif
+//sendSyslogf(tag, LOG_SYSTEM_TIME_FORMAT(E, format), ##__VA_ARGS__); \
 
 
 #define isBitSet(byte,bit)   (((byte & (1 << bit)) != 0) ? 1 : 0)
