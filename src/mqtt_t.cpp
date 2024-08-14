@@ -31,7 +31,6 @@ static String str_mMqttServerHost;
 
 uint32_t u32_mMqttPublishLoopTimmer=0;
 
-uint8_t  mMqttEnable = 0;
 uint8_t  u8_mWaitConnectCounter;
 
 uint32_t sendeTimerBmsMsg;
@@ -57,6 +56,7 @@ enum enum_smMqttEnableState {MQTT_ENABLE_STATE_OFF, MQTT_ENABLE_STATE_EN, MQTT_E
 enum enum_smMqttConnectState {SM_MQTT_WAIT_CONNECTION, SM_MQTT_CONNECTED, SM_MQTT_DISCONNECTED};
 enum_smMqttConnectState smMqttConnectState;
 enum_smMqttConnectState smMqttConnectStateOld;
+enum_smMqttEnableState smMqttEnable = MQTT_ENABLE_STATE_OFF;
 
 bool mqttPublishLoopFromTxBuffer();
 void mqttDataToTxBuffer();
@@ -74,8 +74,8 @@ void initMqtt()
   smMqttConnectStateOld=SM_MQTT_DISCONNECTED;
   u8_mWaitConnectCounter=0;
 
-  if(WebSettings::getBool(ID_PARAM_MQTT_SERVER_ENABLE,0)) mMqttEnable = MQTT_ENABLE_STATE_EN;
-  if(mMqttEnable == MQTT_ENABLE_STATE_OFF) return;
+  if(WebSettings::getBool(ID_PARAM_MQTT_SERVER_ENABLE,0)) smMqttEnable = MQTT_ENABLE_STATE_EN;
+  if(smMqttEnable == MQTT_ENABLE_STATE_OFF) return;
 
   if(!WebSettings::getString(ID_PARAM_MQTT_SERVER_HOST,0).equals(""))
   {
@@ -93,14 +93,14 @@ bool bo_mBTisScanRuningOld=false;
 bool mqttLoop()
 {
   //Is MQTT Enabled?
-  if(mMqttEnable == MQTT_ENABLE_STATE_OFF)
+  if(smMqttEnable == MQTT_ENABLE_STATE_OFF)
   {
     #ifdef MQTT_DEBUG
-    BSC_LOGD(TAG,"mqttLoop(): mMqttEnable=0, ret=1");
+    BSC_LOGD(TAG,"mqttLoop(): smMqttEnable=0, ret=1");
     #endif
     return true;
   }
-  else if(mMqttEnable == MQTT_ENABLE_STATE_EN)
+  else if(smMqttEnable == MQTT_ENABLE_STATE_EN)
   {
     if(haveAllBmsFirstData())
     {
@@ -108,7 +108,7 @@ bool mqttLoop()
       xSemaphoreTake(mMqttMutex, portMAX_DELAY);
       txBuffer.clear();
       xSemaphoreGive(mMqttMutex);
-      mMqttEnable = MQTT_ENABLE_STATE_READY;
+      smMqttEnable = MQTT_ENABLE_STATE_READY;
       BSC_LOGI(TAG,"Daten von allen BMS's vorhanden. Das Senden kann starten.");
     }
     else return true;
@@ -210,7 +210,7 @@ bool mqttConnect()
 {
   bool ret=false;
   uint8_t bo_lBreak=0;
-  if(mMqttEnable == MQTT_ENABLE_STATE_OFF) return true;
+  if(smMqttEnable == MQTT_ENABLE_STATE_OFF) return true;
 
   #ifdef MQTT_DEBUG
   BSC_LOGD(TAG,"mqttConnect() u8_mWaitConnectCounter=%i",u8_mWaitConnectCounter);
@@ -339,7 +339,7 @@ bool mqttPublishLoopFromTxBuffer()
 
 void mqttPublish(int8_t t1, int8_t t2, int8_t t3, int8_t t4, String value)
 {
-  if(mMqttEnable <= MQTT_ENABLE_STATE_EN) return;
+  if(smMqttEnable <= MQTT_ENABLE_STATE_EN) return;
   if(smMqttConnectState==SM_MQTT_DISCONNECTED) return; //Wenn nicht verbunden, dann Nachricht nicht annehmen
   if(WiFi.status()!=WL_CONNECTED) return; //Wenn Wifi nicht verbunden
   if(BleHandler::isNotAllDeviceConnectedOrScanRunning()) //Wenn nicht alle BT-Devices verbunden sind
