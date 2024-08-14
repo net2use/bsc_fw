@@ -24,10 +24,10 @@ static SemaphoreHandle_t mMqttMutex = NULL;
 
 WiFiClient   wifiClient;
 PubSubClient mqttClient(wifiClient);
-IPAddress    mqttIpAdr;
 
 static String str_mMqttDeviceName;
 static String str_mMqttTopicName;
+static String str_mMqttServerHost;
 
 uint32_t u32_mMqttPublishLoopTimmer=0;
 
@@ -77,11 +77,11 @@ void initMqtt()
   if(WebSettings::getBool(ID_PARAM_MQTT_SERVER_ENABLE,0)) mMqttEnable = MQTT_ENABLE_STATE_EN;
   if(mMqttEnable == MQTT_ENABLE_STATE_OFF) return;
 
-  if(!WebSettings::getString(ID_PARAM_MQTT_SERVER_IP,0).equals(""))
+  if(!WebSettings::getString(ID_PARAM_MQTT_SERVER_HOST,0).equals(""))
   {
-    mqttIpAdr.fromString(WebSettings::getString(ID_PARAM_MQTT_SERVER_IP,0).c_str());
-    mqttClient.setServer(mqttIpAdr, (uint16_t)WebSettings::getInt(ID_PARAM_MQTT_SERVER_PORT,0,DT_ID_PARAM_MQTT_SERVER_PORT));
-    BSC_LOGI(TAG,"MQTT: ip=%s, port=%i", mqttIpAdr.toString().c_str(), WebSettings::getInt(ID_PARAM_MQTT_SERVER_PORT,0,DT_ID_PARAM_MQTT_SERVER_PORT));
+    str_mMqttServerHost = WebSettings::getString(ID_PARAM_MQTT_SERVER_HOST,0);
+    mqttClient.setServer(str_mMqttServerHost.c_str(), (uint16_t)WebSettings::getInt(ID_PARAM_MQTT_SERVER_PORT,0,DT_ID_PARAM_MQTT_SERVER_PORT));
+    BSC_LOGI(TAG,"MQTT: ip=%s, port=%i", str_mMqttServerHost.c_str(), WebSettings::getInt(ID_PARAM_MQTT_SERVER_PORT,0,DT_ID_PARAM_MQTT_SERVER_PORT));
     mqttClient.setCallback(mqttCallback);
     mqttClient.setKeepAlive(30);
   }
@@ -222,7 +222,7 @@ bool mqttConnect()
   if(WiFi.status() != WL_CONNECTED) bo_lBreak+=1;
   if(BleHandler::isNotAllDeviceConnectedOrScanRunning()) bo_lBreak+=2;
 
-  if(WebSettings::getString(ID_PARAM_MQTT_SERVER_IP,0).equals("")) bo_lBreak+=4;
+  if(WebSettings::getString(ID_PARAM_MQTT_SERVER_HOST,0).equals("")) bo_lBreak+=4;
   if(WebSettings::getInt(ID_PARAM_MQTT_SERVER_PORT,0,DT_ID_PARAM_MQTT_SERVER_PORT)<=0) bo_lBreak+=8;
 
   if(bo_lBreak!=0)
